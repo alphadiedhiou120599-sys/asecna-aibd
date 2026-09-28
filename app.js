@@ -101,6 +101,19 @@ function enterApp() {
   }
 }
 
+function login(e) {
+  e.preventDefault();
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const s = document.getElementById('loginSite').value;
+  const found = users.find(x => x.user === u && x.pass === p);
+  if (!found) { document.getElementById('loginError').textContent = 'Identifiants incorrects'; return; }
+  currentUser = found;
+  currentSite = s || found.site || 'AIBD';
+  sessionStorage.setItem('currentUser', JSON.stringify(found));
+  sessionStorage.setItem('currentSite', currentSite);
+  enterApp();
+}
 function logout() {
   currentUser = null;
   sessionStorage.removeItem('currentUser');
