@@ -132,7 +132,13 @@ body.dark .alert-item.ok { background: #1e4620; color: #b8e6be; }
       <label>Mot de passe</label>
       <input type="password" id="loginPass" required>
       <label>Site</label>
-      <select id="loginSite"></select>
+      <select id="loginSite">
+  <option value="AIBD" selected>AIBD</option>
+  <option value="DSS">Dakar</option>
+  <option value="BKO">Bamako</option>
+  <option value="NIM">Niamey</option>
+  <option value="OUA">Ouagadougou</option>
+      </select>
       <button type="submit" class="btn">Se connecter</button>
       <div id="loginError"></div>
     </form>
