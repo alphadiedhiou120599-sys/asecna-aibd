@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#003366">
+<title>ASECNA – Suivi Équipements de Secours</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<link rel="manifest" href='data:application/manifest+json,{"name":"ASECNA Suivi Équipements","short_name":"ASECNA","start_url":".","display":"standalone","background_color":"%23f4f6f9","theme_color":"%23003366","orientation":"portrait"}'>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root { --bg:#f4f6f9; --card:#fff; --text:#1a1a1a; --text2:#555; --border:#eee; --primary:#003366; --primary2:#00509e; --input-bg:#fff; --input-border:#ccc; --shadow:rgba(0,0,0,0.08); }
+body.dark { --bg:#121a25; --card:#1e2a3a; --text:#e8eef5; --text2:#a0aec0; --border:#2d3a4d; --primary:#00509e; --primary2:#003366; --input-bg:#243447; --input-border:#3a4a5f; --shadow:rgba(0,0,0,0.4); }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 70px; font-size: 14px; transition: background 0.3s; }
+header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+header h1 { font-size: 15px; }
+header span { font-size: 11px; opacity: 0.85; display: block; }
+#userInfo { font-size: 11px; text-align: right; }
+#logoutBtn, #darkBtn { background: #d9534f; border: none; color: white; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: 4px; }
+#darkBtn { background: rgba(255,255,255,0.15); }
+#dutyBadge { background: #28a745; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; display: inline-block; margin-top: 3px; }
+#dutyBadge.off { background: #6c757d; }
+#onlineBadge { background: #28a745; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; display: inline-block; margin-top: 3px; margin-left: 3px; }
+#onlineBadge.off { background: #dc3545; }
+nav { display: flex; background: var(--primary2); overflow-x: auto; position: sticky; top: 56px; z-index: 99; scrollbar-width: none; }
+nav::-webkit-scrollbar { display: none; }
+nav button { flex: 0 0 auto; padding: 11px 14px; background: none; border: none; color: white; cursor: pointer; font-size: 12px; white-space: nowrap; border-bottom: 3px solid transparent; }
+nav button.active { background: var(--primary); border-bottom: 3px solid #ffcc00; font-weight: bold; }
+main { padding: 12px; }
+.section { display: none; }
+.section.active { display: block; }
+.card { background: var(--card); border-radius: 8px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px var(--shadow); }
+.card h2 { font-size: 15px; margin-bottom: 10px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.stat { background: var(--input-bg); border-left: 4px solid var(--primary2); padding: 10px; border-radius: 6px; }
+.stat .label { font-size: 11px; color: var(--text2); }
+.stat .value { font-size: 20px; font-weight: bold; color: var(--primary); }
+.bar-wrap { background: var(--input-bg); border-radius: 4px; height: 10px; overflow: hidden; margin-top: 4px; }
+.bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+.bar.green { background: #28a745; } .bar.orange { background: #fd7e14; } .bar.red { background: #dc3545; }
+form label { display: block; font-size: 12px; margin: 8px 0 4px; font-weight: 600; }
+form input, form select, form textarea { width: 100%; padding: 9px; border: 1px solid var(--input-border); border-radius: 5px; font-size: 14px; background: var(--input-bg); color: var(--text); }
+form input:focus, form select:focus, form textarea:focus { outline: 2px solid var(--primary2); }
+.btn { margin-top: 12px; width: 100%; padding: 11px; background: var(--primary2); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; }
+.btn-success { background: #28a745; } .btn-danger { background: #dc3545; } .btn-warning { background: #ffc107; color: #333; }
+.btn-sm { padding: 5px 8px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; color: white; margin: 1px; }
+.btn-sm.red { background: #dc3545; } .btn-sm.blue { background: var(--primary2); } .btn-sm.green { background: #28a745; }
+.btn-sm.gray { background: #6c757d; } .btn-sm.purple { background: #6f42c1; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { padding: 7px 5px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { background: var(--input-bg); color: var(--primary); font-size: 11px; }
+.badge { padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: bold; white-space: nowrap; }
+.badge.ok { background: #d4edda; color: #155724; } .badge.warn { background: #fff3cd; color: #856404; }
+.badge.danger { background: #f8d7da; color: #721c24; } .badge.info { background: #d1ecf1; color: #0c5460; }
+.hidden { display: none !important; }
+#loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, #003366, #00509e); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+#loginBox { background: white; border-radius: 12px; padding: 25px; width: 100%; max-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #1a1a1a; }
+#loginBox h1 { color: #003366; font-size: 20px; margin-bottom: 5px; text-align: center; }
+#loginBox p { text-align: center; color: #666; font-size: 12px; margin-bottom: 20px; }
+#loginError { color: #dc3545; font-size: 12px; margin-top: 8px; text-align: center; }
+footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--primary); color: white; text-align: center; padding: 6px; font-size: 10px; z-index: 100; }
+#installBtn { position: fixed; bottom: 80px; right: 15px; background: #28a745; color: white; border: none; padding: 12px 16px; border-radius: 25px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; display: none; z-index: 200; }
+.alert-item { padding: 10px; margin-bottom: 8px; border-radius: 6px; font-size: 12px; }
+.alert-item.danger { background: #f8d7da; color: #721c24; }
+.alert-item.warn { background: #fff3cd; color: #856404; }
+.alert-item.ok { background: #d4edda; color: #155724; }
+body.dark .alert-item.danger { background: #4a1f24; color: #f5c6cb; }
+body.dark .alert-item.warn { background: #4a3d0f; color: #ffe08a; }
+body.dark .alert-item.ok { background: #1e4620; color: #b8e6be; }
+.duty-banner { background: linear-gradient(90deg,#28a745,#20c997); color: white; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+.duty-banner.off { background: linear-gradient(90deg,#6c757d,#495057); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9998; padding: 15px; }
+.modal-box { background: var(--card); color: var(--text); border-radius: 10px; padding: 18px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+.modal-box h2 { color: var(--primary); font-size: 17px; margin-bottom: 10px; }
+.info-box { background: var(--input-bg); padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; }
+#signatureCanvas { width: 100%; height: 180px; border: 2px dashed var(--primary2); border-radius: 8px; background: #fafafa; touch-action: none; cursor: crosshair; display: block; }
+.signature-hint { font-size: 11px; color: var(--text2); text-align: center; margin: 6px 0; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; margin-top: 6px; }
+.photo-item { position: relative; padding-top: 100%; border-radius: 6px; overflow: hidden; border: 1px solid var(--input-border); }
+.photo-item img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-del { position: absolute; top: 2px; right: 2px; background: rgba(220,53,69,0.9); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; cursor: pointer; }
+.photo-input-wrapper { margin-top: 6px; display: flex; gap: 6px; }
+.photo-input-wrapper label { flex: 1; text-align: center; background: var(--primary2); color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin: 0; }
+.photo-input-wrapper input[type=file] { display: none; }
+.report-header { text-align: center; border-bottom: 2px solid #003366; padding-bottom: 10px; margin-bottom: 15px; }
+.report-header .logo { max-width: 90px; margin-bottom: 6px; }
+.report-header h2 { color: #003366; font-size: 18px; margin-bottom: 5px; }
+.report-header .sub { font-size: 12px; color: #555; }
+.report-section { margin-bottom: 20px; page-break-inside: avoid; }
+.report-section h3 { color: #003366; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 8px; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.report-table th, .report-table td { border: 1px solid #ccc; padding: 5px; text-align: left; color: #1a1a1a; }
+.report-table th { background: #e6eef7; color: #003366; }
+.report-signature { border: 1px solid #ccc; padding: 5px; border-radius: 4px; background: #fafafa; }
+.report-signature img { max-width: 100%; max-height: 50px; }
+.report-photo { max-width: 60px; max-height: 60px; border-radius: 4px; }
+.report-footer { margin-top: 30px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ccc; padding-top: 10px; }
+.fiche-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.fiche-qr { background: white; padding: 5px; border-radius: 6px; border: 1px solid var(--border); }
+.fiche-qr img { display: block; width: 90px; height: 90px; }
+.fiche-details { flex: 1; font-size: 12px; }
+.fiche-details div { margin-bottom: 4px; }
+.fiche-details b { color: var(--primary); }
+#qrReader { width: 100%; border-radius: 8px; overflow: hidden; }
+.chart-canvas { width: 100%; height: 220px; }
+.sync-indicator { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: #28a745; color: white; position: fixed; top: 60px; right: 10px; z-index: 101; display: none; }
+.sync-indicator.show { display: block; }
+.sync-indicator.syncing { background: #ffc107; color: #333; }
+@media print {
+  header, nav, footer, #installBtn, .btn, .no-print, .sync-indicator { display: none !important; }
+  body { background: white; padding: 0; font-size: 11px; color: #000; }
+  main { padding: 0; }
+  .section { display: none !important; }
+  #rapport.section { display: block !important; }
+  .card { box-shadow: none; border: none; padding: 0; background: white; }
+  .report-table th, .report-table td { border: 1px solid #000; }
+}
+@media (max-width: 480px) { table { font-size: 11px; } th, td { padding: 5px 3px; } }
+</style>
+</head>
+<body>
+  <!-- LOGIN -->
+<div id="loginScreen">
+  <div id="loginBox">
+    <h1>ASECNA – AIBD</h1>
+    <p>Suivi des équipements de secours</p>
+    <form onsubmit="login(event)">
+      <label>Utilisateur</label>
+      <input type="text" id="loginUser" required>
+      <label>Mot de passe</label>
+      <input type="password" id="loginPass" required>
+      <label>Site</label>
+      <select id="loginSite"></select>
+      <button type="submit" class="btn">Se connecter</button>
+      <div id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<div class="sync-indicator" id="syncIndicator">🔄 Sync...</div>
+
+<!-- HEADER -->
+<header class="hidden" id="appHeader">
+  <div>
+    <h1>ASECNA – <span id="headerSite">AIBD</span></h1>
+    <span>Suivi équipements de secours</span>
+  </div>
+  <div id="userInfo">
+    <div id="userName">–</div>
+    <div id="userRole" style="opacity:0.7"></div>
+    <div id="dutyBadge" class="off">Hors poste</div>
+    <div id="onlineBadge" class="off">Hors ligne</div>
+    <button id="darkBtn" onclick="toggleDark()">🌙</button>
+    <button id="logoutBtn" onclick="logout()">Déco.</button>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="hidden" id="appNav">
+  <button class="active" onclick="showTab('dashboard', this)">📊 Tableau</button>
+  <button onclick="showTab('inventaire', this)">📦 Inventaire</button>
+  <button onclick="showTab('controle', this)">📝 Contrôles</button>
+  <button onclick="showTab('scan', this)">📷 Scanner</button>
+  <button onclick="showTab('alertes', this)">🔔 Alertes</button>
+  <button onclick="showTab('rapport', this)">📄 Rapports</button>
+  <button onclick="showTab('poste', this)">👤 Poste</button>
+  <button onclick="showTab('admin', this)">⚙️ Admin</button>
+</nav>
+
+<main class="hidden" id="appMain">
+
+  <section id="dashboard" class="section active">
+    <div id="dutyBanner" class="duty-banner off">
+      <span id="dutyText">Aucun technicien en poste</span>
+      <button class="btn-sm gray" onclick="showTab('poste', document.querySelectorAll('nav button')[6])">Gérer</button>
+    </div>
+    <div class="card">
+      <h2>Vue globale <span id="dashSite"></span></h2>
+      <div class="stats">
+        <div class="stat"><div class="label">Total équipements</div><div class="value" id="sTotal">0</div></div>
+        <div class="stat"><div class="label">Batteries</div><div class="value" id="sBat">0</div></div>
+        <div class="stat"><div class="label">Onduleurs</div><div class="value" id="sOnd">0</div></div>
+        <div class="stat"><div class="label">Chargeurs</div><div class="value" id="sCha">0</div></div>
+        <div class="stat"><div class="label">Groupes élec.</div><div class="value" id="sGE">0</div></div>
+        <div class="stat"><div class="label">Contrôles</div><div class="value" id="sCtrl">0</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📊 Évolution des contrôles (7 jours)</h2>
+      <canvas id="chartControles" class="chart-canvas"></canvas>
+    </div>
+    <div class="card">
+      <h2>📈 Répartition par type</h2>
+      <canvas id="chartTypes" class="chart-canvas"></canvas>
+    </div>
+    <div class="card">
+      <h2>État de conformité par type</h2>
+      <div id="graphContainer"></div>
+    </div>
+    <div class="card">
+      <h2>Derniers contrôles</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Équipement</th><th>Type</th><th>Résultat</th></tr></thead>
+        <tbody id="lastControls"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Exports</h2>
+      <button class="btn" onclick="exportCSV()">📥 Exporter Excel/CSV</button>
+    </div>
+  </section>
+
+  <section id="inventaire" class="section">
+    <div class="card">
+      <h2>Ajouter un équipement</h2>
+      <form id="formEquip" onsubmit="addEquip(event)">
+        <label>ID équipement *</label>
+        <input type="text" id="eqId" required placeholder="AIBD-BAT-001">
+        <label>Type *</label>
+        <select id="eqType" required onchange="toggleTypeFields()">
+          <option value="">-- Choisir --</option>
+          <option>Batterie</option><option>Onduleur</option><option>Chargeur</option><option>Groupe électrogène</option>
+        </select>
+        <label>Site *</label>
+        <select id="eqSite" required></select>
+        <label>Zone *</label>
+        <select id="eqZone" required>
+          <option value="">-- Choisir --</option>
+          <option>AIBD</option><option>Piste</option><option>Local</option><option>Terminal</option>
+        </select>
+        <label>Localisation précise</label><input type="text" id="eqLoc">
+        <label>Marque / Modèle</label><input type="text" id="eqMarque">
+        <label>N° série</label><input type="text" id="eqSerie">
+        <label>Date mise en service</label><input type="date" id="eqDate">
+        <label>Criticité</label>
+        <select id="eqCrit"><option>Critique</option><option>Important</option><option>Secondaire</option></select>
+        <div id="fieldsBat" class="hidden">
+          <label>Technologie</label>
+          <select id="batTech"><option>Plomb ouvert</option><option>AGM</option><option>GEL</option><option>VRLA</option><option>NiCd</option><option>Li-ion</option></select>
+          <label>Tension nominale (V)</label><input type="text" id="batV">
+          <label>Capacité (Ah)</label><input type="text" id="batAh">
+          <label>Nombre d'éléments</label><input type="number" id="batNb">
+          <label>Tension flottante</label><input type="text" id="batFloat">
+          <label>Tension de charge</label><input type="text" id="batCharge">
+        </div>
+        <div id="fieldsOnd" class="hidden">
+          <label>Puissance (kVA)</label><input type="text" id="ondKva">
+          <label>Tension entrée</label><input type="text" id="ondVe">
+          <label>Tension sortie</label><input type="text" id="ondVs">
+          <label>Autonomie (min)</label><input type="number" id="ondAuto">
+          <label>Type</label><select id="ondType"><option>Online</option><option>Offline</option><option>Line-interactive</option></select>
+        </div>
+        <div id="fieldsCha" class="hidden">
+          <label>Tension sortie</label><input type="text" id="chaVs">
+          <label>Courant max (A)</label><input type="number" id="chaAmp">
+          <label>Type</label><select id="chaType"><option>Float</option><option>Boost</option><option>Égalisation</option></select>
+        </div>
+        <div id="fieldsGE" class="hidden">
+          <label>Puissance (kVA / kW)</label><input type="text" id="geKva">
+          <label>Tension / Fréquence</label><input type="text" id="geVF">
+          <label>Carburant</label><select id="geCarb"><option>Diesel</option><option>Essence</option><option>Gaz</option></select>
+          <label>Réservoir (L)</label><input type="number" id="geRes">
+          <label>Heures de marche</label><input type="number" id="geH">
+        </div>
+        <button type="submit" class="btn">Enregistrer</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Liste des équipements</h2>
+      <input type="text" id="searchEquip" placeholder="🔍 Rechercher..." oninput="renderEquip()" style="margin-bottom:8px">
+      <table>
+        <thead><tr><th>ID</th><th>Type</th><th>Site</th><th>Zone</th><th>État</th><th>Actions</th></tr></thead>
+        <tbody id="listEquip"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="controle" class="section">
+    <div id="dutyWarning" class="alert-item warn hidden">⚠️ Vous n'êtes pas en poste.</div>
+    <div class="card">
+      <h2>Saisir un contrôle</h2>
+      <form id="formCtrl" onsubmit="addCtrl(event)">
+        <label>Équipement *</label>
+        <select id="ctEquip" required></select>
+        <label>Type de contrôle *</label>
+        <select id="ctType" required><option>Hebdomadaire</option><option>Mensuel</option></select>
+        <label>Valeurs mesurées</label>
+        <input type="text" id="ctValeur" placeholder="Ex : Tension 12.4V, T 28°C">
+        <label>Aspect visuel</label>
+        <input type="text" id="ctAspect">
+        <label>Résultat *</label>
+        <select id="ctResultat" required><option>Conforme</option><option>Non conforme</option></select>
+        <label>Action corrective</label>
+        <textarea id="ctAction" rows="2"></textarea>
+        <label>📷 Photos</label>
+        <div class="photo-input-wrapper">
+          <label for="ctPhotoCam">📸 Prendre photo</label>
+          <input type="file" id="ctPhotoCam" accept="image/*" capture="environment" onchange="addPhoto(this)">
+          <label for="ctPhotoGal">🖼️ Galerie</label>
+          <input type="file" id="ctPhotoGal" accept="image/*" multiple onchange="addPhoto(this)">
+        </div>
+        <div class="photo-grid" id="ctPhotosPreview"></div>
+        <button type="submit" class="btn">Enregistrer le contrôle</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Historique des contrôles</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Équipement</th><th>Type</th><th>Résultat</th><th>Validé</th><th></th></tr></thead>
+        <tbody id="listCtrl"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="scan" class="section">
+    <div class="card">
+      <h2>📷 Scanner un QR code</h2>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Pointez la caméra vers le QR code de l'équipement.</p>
+      <div id="qrReader"></div>
+      <button class="btn btn-danger" onclick="stopScanner()">⏹️ Arrêter</button>
+    </div>
+  </section>
+
+  <section id="alertes" class="section">
+    <div class="card">
+      <h2>Alertes actives</h2>
+      <button class="btn btn-warning" onclick="requestNotifPermission()">🔔 Activer les notifications</button>
+      <div id="alertList" style="margin-top:12px;"></div>
+    </div>
+  </section>
+
+  <section id="rapport" class="section">
+    <div class="card no-print">
+      <h2>Générer un rapport</h2>
+      <form onsubmit="generateReport(event)">
+        <label>Type</label>
+        <select id="rapType" required onchange="toggleReportDates()">
+          <option value="jour">Journalier</option>
+          <option value="semaine">Hebdomadaire (7 j)</option>
+          <option value="mois">Mensuel (30 j)</option>
+          <option value="perso">Personnalisé</option>
+        </select>
+        <div id="rapDates" class="hidden">
+          <label>Date début</label><input type="date" id="rapDebut">
+          <label>Date fin</label><input type="date" id="rapFin">
+        </div>
+        <label>Site</label>
+        <select id="rapSite"><option value="">Tous les sites</option></select>
+        <label>Zone</label>
+        <select id="rapZone">
+          <option value="">Toutes</option>
+          <option>AIBD</option><option>Piste</option><option>Local</option><option>Terminal</option>
+        </select>
+        <label>Type d'équipement</label>
+        <select id="rapEq">
+          <option value="">Tous</option>
+          <option>Batterie</option><option>Onduleur</option><option>Chargeur</option><option>Groupe électrogène</option>
+        </select>
+        <label>Email destinataire (optionnel)</label>
+        <input type="email" id="rapEmail" placeholder="chef@asecna.org">
+        <button type="submit" class="btn btn-success">📄 Générer</button>
+      </form>
+    </div>
+    <div class="card no-print" id="rapActions" style="display:none">
+      <button class="btn btn-warning" onclick="window.print()">🖨️ Imprimer / PDF</button>
+      <button class="btn" onclick="exportReportCSV()">📥 CSV</button>
+      <button class="btn btn-success" onclick="sendReportByEmail()">📧 Envoyer par email</button>
+    </div>
+    <div class="card" id="rapContent">
+      <p style="text-align:center;color:var(--text2);font-size:12px;">Générez un rapport.</p>
+    </div>
+  </section>
+
+  <section id="poste" class="section">
+    <div class="card">
+      <h2>Poste du jour – <span id="todayDate"></span></h2>
+      <div id="currentDutyBox"></div>
+      <form onsubmit="declareDuty(event)" style="margin-top:12px">
+        <label>Technicien en poste</label>
+        <select id="dutySelect" required></select>
+        <label>Plage horaire</label>
+        <input type="text" id="dutyPlage" placeholder="Ex : 06h00 - 18h00">
+        <button type="submit" class="btn btn-success">✅ Déclarer en poste</button>
+      </form>
+      <button class="btn btn-danger" onclick="endDuty()" style="margin-top:8px">⏹️ Terminer le poste</button>
+    </div>
+    <div class="card">
+      <h2>Historique des postes</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Technicien</th><th>Site</th><th>Plage</th><th>Début</th><th>Fin</th></tr></thead>
+        <tbody id="listDuty"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="admin" class="section">
+    <div class="card">
+      <h2>🔥 Configuration Firebase</h2>
+      <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">Collez la config Firebase pour activer la synchronisation temps réel.</p>
+      <label>Config Firebase (JSON)</label>
+      <textarea id="fbConfig" rows="6" placeholder='{"apiKey":"...","databaseURL":"..."}'></textarea>
+      <button class="btn btn-success" onclick="saveFbConfig()">💾 Enregistrer</button>
+      <button class="btn btn-warning" onclick="testFbConnection()">🔌 Tester</button>
+      <div id="fbStatus" style="margin-top:8px;font-size:12px;"></div>
+    </div>
+    <div class="card">
+      <h2>🌍 Sites ASECNA</h2>
+      <table>
+        <thead><tr><th>Site</th><th>Code</th><th></th></tr></thead>
+        <tbody id="listSites"></tbody>
+      </table>
+      <form onsubmit="addSite(event)" style="margin-top:10px">
+        <label>Nouveau site</label>
+        <input type="text" id="newSiteName" placeholder="Ex : Aéroport Dakar" required>
+        <label>Code</label>
+        <input type="text" id="newSiteCode" placeholder="Ex : DSS" required>
+        <button type="submit" class="btn btn-success">Ajouter</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Seuils d'alerte</h2>
+      <form onsubmit="saveSeuils(event)">
+        <label>Batterie – tension basse (V)</label><input type="number" step="0.1" id="seuilBatV">
+        <label>Batterie – température max (°C)</label><input type="number" id="seuilBatT">
+        <label>Onduleur – autonomie min (min)</label><input type="number" id="seuilOndAuto">
+        <label>GE – carburant min (%)</label><input type="number" id="seuilGeCarb">
+        <label>Contrôle hebdo – retard (jours)</label><input type="number" id="seuilHebdo">
+        <label>Contrôle mensuel – retard (jours)</label><input type="number" id="seuilMensuel">
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Utilisateurs</h2>
+      <table>
+        <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Site</th><th></th></tr></thead>
+        <tbody id="listUsers"></tbody>
+      </table>
+      <form onsubmit="addUser(event)" style="margin-top:10px">
+        <label>Nouvel utilisateur</label><input type="text" id="newUser" required>
+        <label>Mot de passe</label><input type="text" id="newPass" required>
+        <label>Rôle</label>
+        <select id="newRole"><option>technicien</option><option>chef</option><option>admin</option></select>
+        <label>Site</label>
+        <select id="newUserSite"></select>
+        <button type="submit" class="btn btn-success">Ajouter</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Synchronisation</h2>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px;">Dernière sync : <span id="lastSync">Jamais</span></p>
+      <button class="btn" onclick="forceSyncUp()">⬆️ Forcer l'envoi vers le cloud</button>
+      <button class="btn" onclick="forceSyncDown()">⬇️ Forcer la réception</button>
+    </div>
+    <div class="card">
+      <h2>Maintenance</h2>
+      <button class="btn" onclick="exportCSV()">📥 Exporter CSV</button>
+      <button class="btn btn-danger" onclick="resetAll()">🗑️ Reset total</button>
+    </div>
+  </section>
+
+</main>
+
+<button id="installBtn" onclick="installApp()">⬇️ Installer</button>
+<footer>ASECNA – Prototype v3</footer>
+
+<!-- MODALS -->
+<div id="signatureModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>✍️ Signature du contrôle</h2>
+    <div class="info-box" id="signatureInfo"></div>
+    <label style="font-size:12px;font-weight:600;">Signature *</label>
+    <canvas id="signatureCanvas"></canvas>
+    <div class="signature-hint">Signez avec le doigt ou la souris</div>
+    <button class="btn btn-warning" onclick="clearSignature()">🗑️ Effacer</button>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-success" onclick="confirmValidation()" style="flex:1">✅ Valider</button>
+      <button class="btn btn-danger" onclick="closeSignatureModal()" style="flex:1">❌ Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div id="viewSignatureModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>✍️ Signature</h2>
+    <div id="viewSignatureContent"></div>
+    <button class="btn" onclick="document.getElementById('viewSignatureModal').classList.add('hidden')">Fermer</button>
+  </div>
+</div>
+
+<div id="ficheModal" class="modal-overlay hidden">
+  <div class="modal-box" id="ficheContent" style="max-width:600px;"></div>
+</div>
+
+<div id="qrModal" class="modal-overlay hidden">
+  <div class="modal-box" style="text-align:center;">
+    <h2>QR code équipement</h2>
+    <div id="qrContent"></div>
+    <button class="btn btn-warning" onclick="printQR()">🖨️ Imprimer</button>
+    <button class="btn" onclick="document.getElementById('qrModal').classList.add('hidden')">Fermer</button>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="firebase-init.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
